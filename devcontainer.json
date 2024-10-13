@@ -1,0 +1,8 @@
+{
+    "name": "Shell",
+    "dockerFile": "Dockerfile",
+    "workspaceFolder": "/workspace",
+    "features": {
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    }
+}
