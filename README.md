@@ -18,5 +18,5 @@ requires, which can be found [here](https://github.com/cyrus01337/shell-configur
 ## Inclusions
 - Debian 12 (Bookworm) OS
 - `developer` user with home directory
-- `cargo` for binary installation (shared as a build tool in other images)
-- `starship` for prompt
+- [`cargo`](https://crates.io/) for binary installation (shared as a build tool in other images)
+- [`starship`](https://starship.rs/) for prompt
