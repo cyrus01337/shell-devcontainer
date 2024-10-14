@@ -5,41 +5,24 @@ ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 USER root
 
-RUN ["apt-get", "update"]
-RUN ["apt-get", "dist-upgrade", "-y"]
-RUN ["apt-get", "install", "-y", "curl", "sudo", "zsh"]
-
-RUN addgroup $GROUP \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl sudo zsh \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    \
+    && addgroup $GROUP \
     && useradd -mg $USER -G sudo -s /usr/bin/zsh $USER \
-    && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers;
 
-FROM system AS cargo
-USER $USER
-
-RUN curl -fsLS https://sh.rustup.rs | sh -s -- -y \
-    && . $HOME/.cargo/env \
-    && rustup default stable;
-RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash;
-
-ENV PATH="$PATH:$HOME/.cargo/bin"
-
-FROM cargo AS starship
-ENV PATH="$PATH:$HOME/.cargo/bin"
-
-COPY --from=cargo --chown=$USER:$GROUP $HOME/.cargo/ $HOME/.cargo/
-
-RUN ["cargo", "binstall", "-y", "starship"]
-
-FROM system AS cleanup
+FROM system AS starship
 USER root
 
-COPY --from=cargo --chown=$USER:$GROUP $HOME/.rustup/ $HOME/.rustup/
-COPY --from=cargo --chown=$USER:$GROUP $HOME/.cargo/ $HOME/.cargo/
-COPY --from=starship --chown=$USER:$GROUP $HOME/.cargo/ $HOME/.cargo/
+RUN sh -c "$(curl -sS https://starship.rs/install.sh)" -- -y
 
-RUN ["apt-get", "clean"]
-RUN ["apt-get", "autoremove", "-y"]
-
-FROM cleanup AS final
+FROM system AS final
 USER $USER
 WORKDIR $HOME
+
+COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
