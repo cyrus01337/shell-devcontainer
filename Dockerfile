@@ -7,7 +7,7 @@ USER root
 
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl sudo zsh \
+    && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl git sudo zsh \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -15,6 +15,13 @@ RUN apt-get update \
     && addgroup $GROUP \
     && useradd -mg $USER -G sudo -s /usr/bin/zsh $USER \
     && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers;
+
+FROM system AS configuration
+USER $USER
+WORKDIR $HOME/.config/zsh
+
+RUN git clone --depth=1 --separate-git-dir=$(mktemp -u) https://github.com/cyrus01337/shell-configuration.git . \
+    && git submodule update --init --recursive;
 
 FROM system AS starship
 USER root
@@ -25,4 +32,5 @@ FROM system AS final
 USER $USER
 WORKDIR $HOME
 
+COPY --from=configuration $HOME/.config/zsh $HOME/.config/zsh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
