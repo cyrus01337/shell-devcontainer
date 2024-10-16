@@ -26,16 +26,17 @@ RUN git clone --depth=1 --separate-git-dir=$(mktemp -u) https://github.com/cyrus
 FROM system AS starship
 USER root
 
-RUN sh -c "$(curl -sS https://starship.rs/install.sh)" -- -y
+RUN sh -c "$(curl -sS https://starship.rs/install.sh)" -- -y;
 
 FROM system AS final
 USER $USER
 WORKDIR $HOME
 
-COPY --from=configuration /configuration $HOME/.config/zsh
+COPY --from=configuration --chown=$USER:$GROUP /configuration $HOME/.config/zsh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
 
-RUN ln -s "$HOME/.config/zsh/.zshenv"
+RUN ln -s "$HOME/.config/zsh/.zshenv" \
+    && sudo chown -R $USER:$GROUP $HOME/.config;
 
 ENTRYPOINT ["zsh"]
 
