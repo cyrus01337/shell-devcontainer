@@ -18,7 +18,7 @@ RUN apt-get update \
 
 FROM system AS configuration
 USER $USER
-WORKDIR $HOME/.config/zsh
+WORKDIR /configuration
 
 RUN git clone --depth=1 --separate-git-dir=$(mktemp -u) https://github.com/cyrus01337/shell-configuration.git . \
     && git submodule update --init --recursive;
@@ -32,5 +32,10 @@ FROM system AS final
 USER $USER
 WORKDIR $HOME
 
-COPY --from=configuration $HOME/.config/zsh $HOME/.config/zsh
+COPY --from=configuration /configuration $HOME/.config/zsh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
+
+RUN ln -s "$HOME/.config/zsh/.zshenv"
+
+ENTRYPOINT ["zsh"]
+
