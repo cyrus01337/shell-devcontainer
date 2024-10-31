@@ -3,15 +3,17 @@ ENV DEBIAN_FRONTEND="noninteractive"
 ENV USER="developer"
 ENV GROUP="$USER"
 ENV HOME="/home/$USER"
-ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
 ENV PATH="$PATH:/usr/bin"
+ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
+ENV HELPFUL_PACKAGES="tmux"
+ENV TRANSIENT_PACKAGES="jq"
 USER root
 
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl fish git stow sudo \
-    tmux \
-    jq \
+    $HELPFUL_PACKAGES \
+    $TRANSIENT_PACKAGES \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
