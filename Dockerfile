@@ -11,6 +11,7 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl fish git stow sudo \
     tmux \
+    jq \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -49,7 +50,12 @@ USER root
 RUN sh -c "$(curl -sS https://starship.rs/install.sh)" -- -y;
 
 FROM system AS final
-USER $USER
+USER root
+
+RUN apt-get remove -y jq \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*;
 
 COPY --from=delta /usr/bin/delta /usr/bin/delta
 COPY --from=delta /usr/share/doc/git-delta/ /usr/share/doc/git-delta/
@@ -62,6 +68,7 @@ COPY --from=github-cli /usr/share/zsh/site-functions/_gh /usr/share/zsh/site-fun
 COPY --from=github-cli /var/lib/dpkg/info/gh.* /var/lib/dpkg/info/
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
 
+USER $USER
 WORKDIR $DOTFILES_DIRECTORY
 
 RUN stow --adopt . -t ~ \
