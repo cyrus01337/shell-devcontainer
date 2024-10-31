@@ -30,6 +30,13 @@ RUN curl https://api.github.com/repos/dandavison/delta/releases/latest \
     && dpkg -i delta.deb \
     && rm delta.deb;
 
+FROM system AS dotfiles
+USER $USER
+WORKDIR /dotfiles
+
+RUN git clone --depth=1 https://github.com/cyrus01337/dotfiles-but-better.git . \
+    && git submodule update --init --recursive;
+
 FROM system AS github-cli
 USER root
 
@@ -43,35 +50,34 @@ USER root
 
 RUN sh -c "$(curl -sS https://starship.rs/install.sh)" -- -y;
 
-FROM system AS dotfiles
+FROM system AS docker
 USER root
 
-COPY --chown=$USER:$GROUP ./dotfiles $DOTFILES_DIRECTORY
+RUN sh -c "$(curl -fsSL https://get.docker.com)";
 
-FROM dotfiles AS final
+FROM docker AS final
+ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
 USER root
 
-RUN sh -c "$(curl -fsSL https://get.docker.com)" \
-    \
-    && apt-get remove -y jq \
+RUN apt-get remove -y jq \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*;
 
 COPY --from=delta /usr/bin/delta /usr/bin/delta
+COPY --from=dotfiles --chown=$USER:$GROUP /dotfiles $DOTFILES_DIRECTORY
 COPY --from=github-cli /usr/bin/gh /usr/bin/gh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
 
 USER $USER
-ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
-ENV PATH="$PATH:/usr/bin"
+ENV PATH="/usr/bin:$PATH"
 WORKDIR $DOTFILES_DIRECTORY
 
 RUN stow --adopt . -t ~
-RUN git reset --hard 
-RUN stow . -t ~ 
-RUN sudo chown -R $USER:$GROUP $DOTFILES_DIRECTORY 
-RUN rm -rf $DOTFILES_DIRECTORY/.git
+RUN git reset --hard
+RUN stow . -t ~
+RUN sudo chown -R $USER:$GROUP $DOTFILES_DIRECTORY
+RUN rm -rf .git/
 
 WORKDIR $HOME
 
