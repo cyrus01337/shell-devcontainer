@@ -15,7 +15,7 @@ jobs:
               with:
                   ref: ${{ github.head_ref }}
                   fetch-depth: 0
-                  submodules: "true"
+                  submodules: "recursive"
 
             - name: Extract project metadata
               env:
