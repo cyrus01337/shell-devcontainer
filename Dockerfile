@@ -64,6 +64,7 @@ COPY --from=github-cli /usr/bin/gh /usr/bin/gh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
 
 USER $USER
+ENV PATH="$PATH:/usr/bin"
 WORKDIR $DOTFILES_DIRECTORY
 
 RUN stow --adopt . -t ~ \
