@@ -10,6 +10,7 @@ USER root
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl fish git stow sudo \
+    tmux \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
