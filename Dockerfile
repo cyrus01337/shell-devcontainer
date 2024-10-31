@@ -22,6 +22,11 @@ RUN apt-get update \
     && useradd -mg $USER -G sudo -s /usr/bin/fish $USER \
     && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers;
 
+FROM system AS docker
+USER root
+
+RUN sh -c "$(curl -fsSL https://get.docker.com)";
+
 FROM system AS delta
 USER root
 
@@ -30,13 +35,6 @@ RUN curl https://api.github.com/repos/dandavison/delta/releases/latest \
     | xargs -r -I{} curl -L "{}" -o delta.deb \
     && dpkg -i delta.deb \
     && rm delta.deb;
-
-FROM system AS dotfiles
-USER $USER
-WORKDIR /dotfiles
-
-RUN git clone --depth=1 https://github.com/cyrus01337/dotfiles-but-better.git . \
-    && git submodule update --init --recursive;
 
 FROM system AS github-cli
 USER root
@@ -59,15 +57,10 @@ RUN apt-get remove -y jq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*;
 
+COPY --chown=$USER:$GROUP ./dotfiles $DOTFILES_DIRECTORY
+
 COPY --from=delta /usr/bin/delta /usr/bin/delta
-COPY --from=delta /usr/share/doc/git-delta/ /usr/share/doc/git-delta/
-COPY --from=delta /var/lib/dpkg/info/git-delta.* /var/lib/dpk/info/
-COPY --from=dotfiles --chown=$USER:$GROUP /dotfiles $DOTFILES_DIRECTORY
-COPY --from=github-cli /etc/apt/keyrings/githubcli-archive-keyring.gpg /etc/apt/keyrings/
-COPY --from=github-cli /etc/apt/sources.list.d/github-cli.list /etc/apt/sources.list.d/
 COPY --from=github-cli /usr/bin/gh /usr/bin/gh
-COPY --from=github-cli /usr/share/zsh/site-functions/_gh /usr/share/zsh/site-functions/_gh
-COPY --from=github-cli /var/lib/dpkg/info/gh.* /var/lib/dpkg/info/
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
 
 USER $USER
