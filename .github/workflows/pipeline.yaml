@@ -48,6 +48,12 @@ jobs:
                   push: true
                   tags: ${{ env.TAG }}
 
+    dispatch:
+        name: Dispatch build event
+        runs-on: ubuntu-latest
+        needs: publish
+
+        steps:
             - name: Parse short commit hash
               id: commit-hash
               run: |
