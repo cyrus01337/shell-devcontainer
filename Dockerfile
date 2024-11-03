@@ -65,7 +65,6 @@ COPY --from=github-cli /usr/bin/gh /usr/bin/gh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
 
 USER $USER
-ENV PATH="/usr/bin:$PATH"
 WORKDIR $DOTFILES_DIRECTORY
 
 RUN stow --adopt . -t ~
@@ -84,5 +83,4 @@ RUN apt-get remove -y $TRANSIENT_PACKAGES \
 USER $USER
 WORKDIR $HOME
 
-ENTRYPOINT ["fish"]
-
+ENTRYPOINT ["sleep", "infinity"]
