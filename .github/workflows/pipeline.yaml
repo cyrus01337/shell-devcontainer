@@ -54,6 +54,12 @@ jobs:
         needs: publish
 
         steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.head_ref }}
+                  fetch-depth: 0
+                  submodules: "recursive"
+
             - name: Parse short commit hash
               id: commit-hash
               run: |
