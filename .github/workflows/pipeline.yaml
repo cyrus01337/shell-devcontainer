@@ -4,6 +4,10 @@ on:
     pull_request:
     push:
         branches: ["*"]
+        paths:
+            - "Dockerfile"
+            - "*.sh"
+            - ".github/workflows/**"
     repository_dispatch:
 
 jobs:
