@@ -5,12 +5,12 @@ ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
 ENV HELPFUL_PACKAGES="tmux"
-ENV TRANSIENT_PACKAGES="jq"
+ENV TRANSIENT_PACKAGES="jq stow"
 USER root
 
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl fish git stow sudo \
+    && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl fish git sudo \
     $HELPFUL_PACKAGES \
     $TRANSIENT_PACKAGES \
     && apt-get autoremove -y \
@@ -59,11 +59,6 @@ FROM docker AS final
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
 USER root
 
-RUN apt-get remove -y jq \
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*;
-
 COPY --from=delta /usr/bin/delta /usr/bin/delta
 COPY --from=dotfiles --chown=$USER:$GROUP /dotfiles $DOTFILES_DIRECTORY
 COPY --from=github-cli /usr/bin/gh /usr/bin/gh
@@ -79,6 +74,14 @@ RUN stow . -t ~
 RUN sudo chown -R $USER:$GROUP $DOTFILES_DIRECTORY
 RUN rm -rf .git/
 
+USER root
+
+RUN apt-get remove -y $TRANSIENT_PACKAGES \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*;
+
+USER $USER
 WORKDIR $HOME
 
 ENTRYPOINT ["fish"]
