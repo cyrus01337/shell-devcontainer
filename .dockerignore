@@ -1,6 +1,0 @@
-.github
-.devcontainer.json
-.dockerignore
-.git*
-Dockerfile
-README.md
