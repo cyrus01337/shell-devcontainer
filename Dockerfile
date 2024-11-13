@@ -5,7 +5,7 @@ ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
 ENV HELPFUL_PACKAGES="tmux"
-ENV TRANSIENT_PACKAGES="curl jq stow xz-utils"
+ENV TRANSIENT_PACKAGES="stow"
 USER root
 
 RUN apt-get update \
@@ -14,16 +14,17 @@ RUN apt-get update \
     $HELPFUL_PACKAGES \
     $TRANSIENT_PACKAGES \
     && nala autoremove -y \
-    && nala clean \
     && rm -rf /var/lib/apt/lists/* \
     \
     && addgroup $GROUP \
     && useradd -mg $USER -G sudo -s /usr/bin/fish $USER \
     && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers;
 
-FROM system AS delta
+FROM debian:bookworm-slim AS delta
 USER root
 
+RUN apt-get update \
+    && apt-get install -y curl jq;
 RUN curl https://api.github.com/repos/dandavison/delta/releases/latest \
     | jq -r ".assets[9].browser_download_url" \
     | xargs -r -I{} curl -L "{}" -o delta.deb \
@@ -46,9 +47,12 @@ COPY ./install-github-cli.sh .
 RUN ./install-github-cli.sh \
     && rm -rf ./install-github-cli.sh /var/lib/apt/lists/*;
 
-FROM system AS starship
+FROM debian:bookworm-slim AS starship
 USER root
 
+RUN apt-get update \
+    && apt-get install -y curl \
+    && rm -rf /var/lib/apt/lists/*;
 RUN sh -c "$(curl -sS https://starship.rs/install.sh)" -- -y;
 
 FROM system AS docker
@@ -77,7 +81,6 @@ USER root
 
 RUN chown -R $USER:$GROUP $DOTFILES_DIRECTORY \
     && nala remove -y $TRANSIENT_PACKAGES \
-    && nala clean \
     && nala autoremove -y;
 
 USER $USER
