@@ -4,7 +4,7 @@ ENV USER="developer"
 ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
-ENV HELPFUL_PACKAGES="tmux"
+ENV HELPFUL_PACKAGES="nala tmux"
 ENV TRANSIENT_PACKAGES="jq stow"
 USER root
 
