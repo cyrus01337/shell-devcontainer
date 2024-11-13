@@ -13,8 +13,8 @@ RUN apt-get update \
     && nala install -y --no-install-recommends --no-install-suggests ca-certificates fish git sudo \
     $HELPFUL_PACKAGES \
     $TRANSIENT_PACKAGES \
-    && apt-get autoremove -y \
-    && apt-get clean \
+    && nala autoremove -y \
+    && nala clean \
     && rm -rf /var/lib/apt/lists/* \
     \
     && addgroup $GROUP \
@@ -46,19 +46,6 @@ COPY ./install-github-cli.sh .
 RUN ./install-github-cli.sh \
     && rm -rf ./install-github-cli.sh /var/lib/apt/lists/*;
 
-FROM system AS zig
-USER root
-ENV UNPACKED_DIRECTORY_NAME="zig-linux-x86_64-0.14.0-dev.2238+1db8cade5"
-WORKDIR /tmp
-
-RUN curl -L "https://ziglang.org/builds/${UNPACKED_DIRECTORY_NAME}.tar.xz" \
-    | tar -Jx "${UNPACKED_DIRECTORY_NAME}/lib/" "${UNPACKED_DIRECTORY_NAME}/zig";
-
-WORKDIR /zig
-
-RUN mv /tmp/${UNPACKED_DIRECTORY_NAME}/* . \
-    && rm -rf "/tmp/${UNPACKED_DIRECTORY_NAME}";
-
 FROM system AS starship
 USER root
 
@@ -77,8 +64,6 @@ COPY --from=delta /usr/bin/delta /usr/bin/delta
 COPY --from=dotfiles --chown=$USER:$GROUP /dotfiles $DOTFILES_DIRECTORY
 COPY --from=github-cli /usr/bin/gh /usr/bin/gh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
-COPY --from=zig /zig/lib/ /usr/lib/zig/
-COPY --from=zig /zig/zig /usr/bin/zig
 
 USER $USER
 WORKDIR $DOTFILES_DIRECTORY
@@ -91,9 +76,9 @@ RUN stow --adopt . -t ~ \
 USER root
 
 RUN chown -R $USER:$GROUP $DOTFILES_DIRECTORY \
-    && apt-get remove -y $TRANSIENT_PACKAGES \
-    && apt-get autoremove -y \
-    && apt-get clean;
+    && nala remove -y $TRANSIENT_PACKAGES \
+    && nala clean \
+    && nala autoremove -y;
 
 USER $USER
 WORKDIR $HOME
