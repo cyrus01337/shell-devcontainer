@@ -4,13 +4,13 @@ ENV USER="developer"
 ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
-ENV HELPFUL_PACKAGES="nala tmux"
-ENV TRANSIENT_PACKAGES="jq stow"
+ENV HELPFUL_PACKAGES="tmux"
+ENV TRANSIENT_PACKAGES="curl jq stow xz-utils"
 USER root
 
 RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends --no-install-suggests ca-certificates curl fish git sudo \
+    && apt-get install -y --no-install-recommends --no-install-suggests nala \
+    && nala install -y --no-install-recommends --no-install-suggests ca-certificates fish git sudo \
     $HELPFUL_PACKAGES \
     $TRANSIENT_PACKAGES \
     && apt-get autoremove -y \
@@ -28,7 +28,8 @@ RUN curl https://api.github.com/repos/dandavison/delta/releases/latest \
     | jq -r ".assets[9].browser_download_url" \
     | xargs -r -I{} curl -L "{}" -o delta.deb \
     && dpkg -i delta.deb \
-    && rm delta.deb;
+    && rm delta.deb \
+    && rm -rf /var/lib/apt/lists/*;
 
 FROM system AS dotfiles
 USER $USER
@@ -43,7 +44,20 @@ USER root
 COPY ./install-github-cli.sh .
 
 RUN ./install-github-cli.sh \
-    && rm ./install-github-cli.sh;
+    && rm -rf ./install-github-cli.sh /var/lib/apt/lists/*;
+
+FROM system AS zig
+USER root
+ENV UNPACKED_DIRECTORY_NAME="zig-linux-x86_64-0.14.0-dev.2238+1db8cade5"
+WORKDIR /tmp
+
+RUN curl -L "https://ziglang.org/builds/${UNPACKED_DIRECTORY_NAME}.tar.xz" \
+    | tar -Jx "${UNPACKED_DIRECTORY_NAME}/lib/" "${UNPACKED_DIRECTORY_NAME}/zig";
+
+WORKDIR /zig
+
+RUN mv /tmp/${UNPACKED_DIRECTORY_NAME}/* . \
+    && rm -rf "/tmp/${UNPACKED_DIRECTORY_NAME}";
 
 FROM system AS starship
 USER root
@@ -63,22 +77,23 @@ COPY --from=delta /usr/bin/delta /usr/bin/delta
 COPY --from=dotfiles --chown=$USER:$GROUP /dotfiles $DOTFILES_DIRECTORY
 COPY --from=github-cli /usr/bin/gh /usr/bin/gh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
+COPY --from=zig /zig/lib/ /usr/lib/zig/
+COPY --from=zig /zig/zig /usr/bin/zig
 
 USER $USER
 WORKDIR $DOTFILES_DIRECTORY
 
-RUN stow --adopt . -t ~
-RUN git reset --hard
-RUN stow . -t ~
-RUN sudo chown -R $USER:$GROUP $DOTFILES_DIRECTORY
-RUN rm -rf .git/
+RUN stow --adopt . -t ~ \
+    && git reset --hard \
+    && stow . -t ~ \
+    && rm -rf .git/;
 
 USER root
 
-RUN apt-get remove -y $TRANSIENT_PACKAGES \
+RUN chown -R $USER:$GROUP $DOTFILES_DIRECTORY \
+    && apt-get remove -y $TRANSIENT_PACKAGES \
     && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*;
+    && apt-get clean;
 
 USER $USER
 WORKDIR $HOME
