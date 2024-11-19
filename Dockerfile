@@ -4,7 +4,7 @@ ENV USER="developer"
 ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
-ENV HELPFUL_PACKAGES="openssh-client tmux"
+ENV HELPFUL_PACKAGES="tmux"
 ENV TRANSIENT_PACKAGES="stow"
 USER root
 
