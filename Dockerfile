@@ -36,8 +36,7 @@ FROM system AS dotfiles
 USER $USER
 WORKDIR /dotfiles
 
-RUN git clone --depth=1 https://github.com/cyrus01337/dotfiles-but-better.git . \
-    && git submodule update --init --recursive;
+RUN git clone --recurse-submodules --depth=1 https://github.com/cyrus01337/dotfiles-but-better.git .;
 
 FROM system AS github-cli
 USER root
