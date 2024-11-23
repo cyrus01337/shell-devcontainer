@@ -57,7 +57,10 @@ RUN sh -c "$(curl -sS https://starship.rs/install.sh)" -- -y;
 FROM system AS docker
 USER root
 
-RUN sh -c "$(curl -fsSL https://get.docker.com)";
+RUN curl -fsSL https://get.docker.com -o install-docker.sh \
+    && chmod +x install-docker.sh;
+RUN sh ./install-docker.sh \
+    && rm install-docker.sh;
 
 FROM docker AS final
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
