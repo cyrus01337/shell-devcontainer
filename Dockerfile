@@ -5,7 +5,7 @@ ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
 ENV HELPFUL_PACKAGES="tmux"
-ENV TRANSIENT_PACKAGES="stow"
+ENV TRANSIENT_PACKAGES="curl stow"
 USER root
 
 RUN apt-get update \
