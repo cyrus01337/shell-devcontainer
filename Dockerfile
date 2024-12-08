@@ -10,7 +10,8 @@ USER root
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests nala \
-    && nala install -y --no-install-recommends --no-install-suggests ca-certificates fish git sudo \
+    && nala install -y --no-install-recommends --no-install-suggests \
+    ca-certificates fish git openssh-client sudo \
     $HELPFUL_PACKAGES \
     $TRANSIENT_PACKAGES \
     && nala autoremove -y \
