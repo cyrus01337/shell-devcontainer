@@ -4,22 +4,23 @@ ENV USER="developer"
 ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
-ENV HELPFUL_PACKAGES="tmux"
-ENV TRANSIENT_PACKAGES="curl stow"
+ENV HELPFUL_PACKAGES="git tmux"
+# TODO: Optimize Docker installation by temporarily installing apt-utils
+ENV TRANSIENT_PACKAGES="curl"
 USER root
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends --no-install-suggests nala \
-    && nala install -y --no-install-recommends --no-install-suggests \
-    ca-certificates fish git openssh-client sudo \
-    $HELPFUL_PACKAGES \
+    && apt-get install -y --no-install-recommends --no-install-suggests \
+    ca-certificates fish openssh-client sudo \
     $TRANSIENT_PACKAGES \
-    && nala autoremove -y \
-    && rm -rf /var/lib/apt/lists/* \
-    \
-    && addgroup $GROUP \
+    && apt-get install -y $HELPFUL_PACKAGES \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*;
+RUN addgroup $GROUP \
     && useradd -mg $USER -G sudo -s /usr/bin/fish $USER \
-    && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers;
+    && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
+    && mkdir -p $HOME/.ssh \
+    && ssh-keyscan github.com >> $HOME/.ssh/known_hosts;
 
 FROM debian:bookworm-slim AS delta
 USER root
@@ -28,16 +29,13 @@ RUN apt-get update \
     && apt-get install -y curl jq;
 RUN curl https://api.github.com/repos/dandavison/delta/releases/latest \
     | jq -r ".assets[9].browser_download_url" \
-    | xargs -r -I{} curl -L "{}" -o delta.deb \
+    | xargs -r -I {} curl -L "{}" -o delta.deb \
     && dpkg -i delta.deb \
     && rm delta.deb \
+    \
+    && apt-get remove -y curl jq \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*;
-
-FROM system AS dotfiles
-USER $USER
-WORKDIR /dotfiles
-
-RUN git clone --recurse-submodules --depth=1 https://github.com/cyrus01337/dotfiles-but-better.git .;
 
 FROM system AS github-cli
 USER root
@@ -65,27 +63,14 @@ RUN ./install-docker.sh \
     && rm ./install-docker.sh;
 
 FROM docker AS final
-ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
 USER root
 
 COPY --from=delta /usr/bin/delta /usr/bin/delta
-COPY --from=dotfiles --chown=$USER:$GROUP /dotfiles $DOTFILES_DIRECTORY
 COPY --from=github-cli /usr/bin/gh /usr/bin/gh
 COPY --from=starship /usr/local/bin/starship /usr/local/bin/starship
 
-USER $USER
-WORKDIR $DOTFILES_DIRECTORY
-
-RUN stow --adopt . -t ~ \
-    && git reset --hard \
-    && stow . -t ~ \
-    && rm -rf .git/;
-
-USER root
-
-RUN chown -R $USER:$GROUP $DOTFILES_DIRECTORY \
-    && nala remove -y $TRANSIENT_PACKAGES \
-    && nala autoremove -y;
+RUN apt-get remove -y $TRANSIENT_PACKAGES \
+    && apt-get autoremove -y;
 
 USER $USER
 WORKDIR $HOME
