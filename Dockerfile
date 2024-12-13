@@ -18,8 +18,8 @@ RUN apt-get update \
 RUN addgroup $GROUP \
     && useradd -mg $USER -G sudo -s /usr/bin/fish $USER \
     && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
-    && mkdir -p $HOME/.ssh \
-    && ssh-keyscan github.com >> $HOME/.ssh/known_hosts;
+    && mkdir -p $HOME/.ssh;
+RUN ssh-keyscan github.com >> $HOME/.ssh/known_hosts;
 
 FROM debian:bookworm-slim AS delta
 USER root
