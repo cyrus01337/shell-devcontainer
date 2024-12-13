@@ -5,8 +5,7 @@ ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
 ENV HELPFUL_PACKAGES="git tmux"
-# TODO: Optimize Docker installation by temporarily installing apt-utils
-ENV TRANSIENT_PACKAGES="curl"
+ENV TRANSIENT_PACKAGES="apt-utils curl"
 USER root
 
 RUN apt-get update \
