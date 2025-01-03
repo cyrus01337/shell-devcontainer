@@ -12,8 +12,8 @@ publicise, and a way for me to use my development environment wherever I please
 approach, however, I recommend performing your own research on that matter.
 
 ## What is this for?
-This acts as a base to setup all relevant tools that my shell configuration
-requires, which can be found [here](https://github.com/cyrus01337/shell-configuration).
+This acts as a base to setup all relevant tools that my dotfiles require, which
+can be found [here](https://github.com/cyrus01337/dotfiles-but-better).
 
 ## Inclusions
 - Debian 12 (Bookworm) OS
