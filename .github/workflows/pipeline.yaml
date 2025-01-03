@@ -1,3 +1,5 @@
+# TODO: Format
+# TODO: Rename
 name: Pipeline
 
 on:
@@ -72,6 +74,8 @@ jobs:
 
                 echo "SHORT_COMMIT_HASH=$SHORT_COMMIT_HASH" >> "$GITHUB_ENV"
 
+            # TODO: Dynamically calculate/retrieve Github API version, or omit
+            # header entirely if possible
             - name: Dispatch build event to cyrus01337/neovim-devcontainer
               env:
                 WORKFLOW_DISPATCH_TOKEN: ${{ secrets.WORKFLOW_DISPATCH_TOKEN }}
@@ -91,5 +95,5 @@ jobs:
                 if [[ $status_code ]]; then
                     echo "Request status code: $status_code..."
 
-                   exit 1
+                    exit 1
                 fi
