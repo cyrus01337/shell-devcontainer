@@ -4,7 +4,7 @@ ENV USER="developer"
 ENV GROUP="$USER"
 ENV HOME="/home/$USER"
 ENV DOTFILES_DIRECTORY="$HOME/.local/share/dotfiles"
-ENV HELPFUL_PACKAGES="curl git tmux wget"
+ENV HELPFUL_PACKAGES="curl fzf git tmux wget"
 ENV TRANSIENT_PACKAGES="apt-utils"
 USER root
 
